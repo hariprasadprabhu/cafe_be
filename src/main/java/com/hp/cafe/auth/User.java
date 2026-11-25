@@ -20,8 +20,14 @@ public class User {
     @Column(nullable = false)
     private String name;
 
+    private String dateOfBirth;
+
+    private String mobileNumber;
+
     @Column(nullable = false)
     private Instant createdAt = Instant.now();
+
+    private String pushToken;
 
     protected User() {}
 
@@ -35,4 +41,14 @@ public class User {
     public String getEmail() { return email; }
     public String getPasswordHash() { return passwordHash; }
     public String getName() { return name; }
+    public String getDateOfBirth() { return dateOfBirth; }
+    public String getMobileNumber() { return mobileNumber; }
+    public String getPushToken() { return pushToken; }
+
+    public void updateProfile(String dateOfBirth, String mobileNumber) {
+        this.dateOfBirth = dateOfBirth;
+        this.mobileNumber = mobileNumber;
+    }
+
+    public void updatePushToken(String pushToken) { this.pushToken = pushToken; }
 }

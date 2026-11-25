@@ -58,7 +58,22 @@ public class AuthService {
     public AuthDtos.UserResponse me(String userId) {
         User user = users.findById(java.util.UUID.fromString(userId))
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid access token"));
-        return new AuthDtos.UserResponse(user.getId().toString(), user.getName(), user.getEmail());
+        return toUserResponse(user);
+    }
+
+    @Transactional
+    public AuthDtos.UserResponse updateProfile(String userId, AuthDtos.ProfileRequest request) {
+        if (request == null || request.dob() == null || request.mobile() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "DOB and mobile number are required");
+        }
+        if (!request.mobile().matches("\\d{10}")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mobile number must contain exactly 10 digits");
+        }
+        User user = users.findById(java.util.UUID.fromString(userId))
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid access token"));
+        user.updateProfile(request.dob().trim(), request.mobile().trim());
+        users.save(user);
+        return toUserResponse(user);
     }
 
     @Transactional
@@ -75,6 +90,17 @@ public class AuthService {
         return issueTokens(stored.getUser());
     }
 
+    @Transactional
+    public void updatePushToken(String userId, AuthDtos.PushTokenRequest request) {
+        if (request == null || request.pushToken() == null || request.pushToken().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Push token is required");
+        }
+        User user = users.findById(java.util.UUID.fromString(userId))
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid access token"));
+        user.updatePushToken(request.pushToken().trim());
+        users.save(user);
+    }
+
     private AuthDtos.AuthResponse issueTokens(User user) {
         byte[] bytes = new byte[48];
         random.nextBytes(bytes);
@@ -82,8 +108,7 @@ public class AuthService {
         RefreshToken refreshToken = new RefreshToken(hash(rawToken), user,
             Instant.now().plusSeconds(30L * 24 * 60 * 60));
         refreshTokens.save(refreshToken);
-        AuthDtos.UserResponse responseUser = new AuthDtos.UserResponse(
-            user.getId().toString(), user.getName(), user.getEmail());
+        AuthDtos.UserResponse responseUser = toUserResponse(user);
         return new AuthDtos.AuthResponse(jwtService.createAccessToken(user), rawToken, responseUser);
     }
 
@@ -109,5 +134,11 @@ public class AuthService {
         } catch (Exception exception) {
             throw new IllegalStateException("Unable to hash refresh token", exception);
         }
+    }
+
+    private AuthDtos.UserResponse toUserResponse(User user) {
+        return new AuthDtos.UserResponse(
+            user.getId().toString(), user.getName(), user.getEmail(),
+            user.getDateOfBirth(), user.getMobileNumber());
     }
 }

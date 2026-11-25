@@ -33,4 +33,16 @@ public class AuthController {
     public AuthDtos.AuthResponse refresh(@RequestBody AuthDtos.RefreshRequest request) {
         return authService.refresh(request.refreshToken());
     }
+
+    @PutMapping("/profile")
+    public AuthDtos.UserResponse updateProfile(@AuthenticationPrincipal String userId,
+                                               @RequestBody AuthDtos.ProfileRequest request) {
+        return authService.updateProfile(userId, request);
+    }
+
+    @PutMapping("/push-token")
+    public void updatePushToken(@AuthenticationPrincipal String userId,
+                                @RequestBody AuthDtos.PushTokenRequest request) {
+        authService.updatePushToken(userId, request);
+    }
 }

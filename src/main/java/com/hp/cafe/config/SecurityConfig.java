@@ -34,6 +34,11 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/signup", "/api/auth/login", "/api/auth/refresh").permitAll()
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/menu/**").permitAll()
+                .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/menu/**").permitAll()
+                .requestMatchers(org.springframework.http.HttpMethod.PATCH, "/api/menu/**").permitAll()
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/orders/store/**").permitAll()
+                .requestMatchers(org.springframework.http.HttpMethod.PATCH, "/api/orders/*/status").permitAll()
                 .requestMatchers("/api/auth/me").authenticated()
                 .anyRequest().authenticated())
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
